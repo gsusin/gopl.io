@@ -1,7 +1,7 @@
 // Copyright © 2016 Alan A. A. Donovan & Brian W. Kernighan.
 // License: https://creativecommons.org/licenses/by-nc-sa/4.0/
 
-// Exercício 5.1
+// Exercício 5.2
 
 // See page 122.
 //!+main
@@ -22,30 +22,30 @@ func main() {
 		fmt.Fprintf(os.Stderr, "findlinks1: %v\n", err)
 		os.Exit(1)
 	}
-	for _, link := range visit(nil, doc, nil) {
-		fmt.Println(link)
+	for e, q := range visit(nil, doc, nil) {
+		fmt.Printf("%s\t%d\n", e, q)
 	}
+	fmt.Printf("%v\n", doc)
 }
 
 //!-main
 
 //!+visit
 // visit appends to links each link found in n and returns the result.
-func visit(links []string, n *html.Node, nextSibling *html.Node) []string {
-	if n.Type == html.ElementNode && n.Data == "a" {
-		for _, a := range n.Attr {
-			if a.Key == "href" {
-				links = append(links, a.Val)
-			}
-		}
+func visit(elementos map[string]int, n *html.Node, nextSibling *html.Node) map[string]int {
+	if elementos == nil {
+		elementos = make(map[string]int)
+	}
+	if n.Type == html.ElementNode {
+		elementos[n.Data]++
 	}
 	if n.FirstChild != nil {
-		links = visit(links, n.FirstChild, n.FirstChild.NextSibling)
+		elementos = visit(elementos, n.FirstChild, n.FirstChild.NextSibling)
 	}
 	if nextSibling != nil {
-		links = visit(links, nextSibling, nextSibling.NextSibling)
+		elementos = visit(elementos, nextSibling, nextSibling.NextSibling)
 	}
-	return links
+	return elementos
 }
 
 //!-visit

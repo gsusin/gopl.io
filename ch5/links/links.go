@@ -1,6 +1,9 @@
 // Copyright © 2016 Alan A. A. Donovan & Brian W. Kernighan.
 // License: https://creativecommons.org/licenses/by-nc-sa/4.0/
 
+// Exercício 5.13
+// Modificado por Giancarlo Susin em 09/06/2020
+
 // See page 138.
 //!+Extract
 
@@ -8,7 +11,9 @@
 package links
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"golang.org/x/net/html"
@@ -49,6 +54,48 @@ func Extract(url string) ([]string, error) {
 	}
 	forEachNode(doc, visitNode, nil)
 	return links, nil
+}
+
+// Extract makes an HTTP GET request to the specified URL, parses
+// the response as HTML, and returns the links in the HTML document.
+//func Extract2(url string) ([]string, *html.Node, error) {
+func Extract2(url string) ([]string, []byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
+		return nil, nil, fmt.Errorf("getting %s: %s", url, resp.Status)
+	}
+
+	conteúdo, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return nil, nil, fmt.Errorf("reading body from %s", url)
+	}
+	doc, err := html.Parse(bytes.NewReader(conteúdo))
+	if err != nil {
+		return nil, nil, fmt.Errorf("parsing %s as HTML: %v", url, err)
+	}
+
+	var links []string
+	visitNode := func(n *html.Node) {
+		if n.Type == html.ElementNode && n.Data == "a" {
+			for _, a := range n.Attr {
+				if a.Key != "href" {
+					continue
+				}
+				link, err := resp.Request.URL.Parse(a.Val)
+				if err != nil {
+					continue // ignore bad URLs
+				}
+				links = append(links, link.String())
+			}
+		}
+	}
+	forEachNode(doc, visitNode, nil)
+	return links, conteúdo, nil
 }
 
 //!-Extract

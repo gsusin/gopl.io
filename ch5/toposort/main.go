@@ -1,6 +1,8 @@
 // Copyright © 2016 Alan A. A. Donovan & Brian W. Kernighan.
 // License: https://creativecommons.org/licenses/by-nc-sa/4.0/
 
+// Exercício 5.10
+
 // See page 136.
 
 // The toposort program prints the nodes of a DAG in topological order.
@@ -8,7 +10,6 @@ package main
 
 import (
 	"fmt"
-	"sort"
 )
 
 //!+table
@@ -36,34 +37,44 @@ var prereqs = map[string][]string{
 
 //!+main
 func main() {
-	for i, course := range topoSort(prereqs) {
-		fmt.Printf("%d:\t%s\n", i+1, course)
+	courses, nivel := topoSort(prereqs)
+	for i := range courses {
+		fmt.Printf("%d:\t%s %d\n", i+1, courses[i], nivel[i])
 	}
 }
 
-func topoSort(m map[string][]string) []string {
+func topoSort(m map[string][]string) ([]string, []int) {
 	var order []string
+	var nivel []int
 	seen := make(map[string]bool)
-	var visitAll func(items []string)
+	var visitAll func(items map[string][]string) int
 
-	visitAll = func(items []string) {
-		for _, item := range items {
-			if !seen[item] {
-				seen[item] = true
-				visitAll(m[item])
-				order = append(order, item)
+	visitAll = func(items map[string][]string) int {
+		ntotal := 1
+		for key, _ := range items {
+			//fmt.Printf("Passou por: %s\n", item)
+			nsub := 1
+			if !seen[key] {
+				seen[key] = true
+				prox, ok := m[key]
+				if ok {
+					filhos := make(map[string][]string)
+					for _, filho := range prox {
+						filhos[filho] = nil
+					}
+					nsub = visitAll(filhos) + 1
+				}
+				order = append(order, key)
+				nivel = append(nivel, nsub)
+			}
+			if ntotal < nsub {
+				ntotal = nsub
 			}
 		}
+		return ntotal
 	}
-
-	var keys []string
-	for key := range m {
-		keys = append(keys, key)
-	}
-
-	sort.Strings(keys)
-	visitAll(keys)
-	return order
+	visitAll(m)
+	return order, nivel
 }
 
 //!-main

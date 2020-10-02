@@ -1,6 +1,8 @@
 // Copyright © 2016 Alan A. A. Donovan & Brian W. Kernighan.
 // License: https://creativecommons.org/licenses/by-nc-sa/4.0/
 
+// Exercício 5.12
+
 // See page 133.
 
 // Outline prints the outline of an HTML document tree.
@@ -32,6 +34,19 @@ func outline(url string) error {
 		return err
 	}
 
+	var depth int
+	startElement := func(n *html.Node) {
+		if n.Type == html.ElementNode {
+			fmt.Printf("%*s<%s>\n", depth*2, "", n.Data)
+			depth++
+		}
+	}
+	endElement := func(n *html.Node) {
+		if n.Type == html.ElementNode {
+			depth--
+			fmt.Printf("%*s</%s>\n", depth*2, "", n.Data)
+		}
+	}
 	//!+call
 	forEachNode(doc, startElement, endElement)
 	//!-call
