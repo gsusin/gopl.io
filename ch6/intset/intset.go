@@ -1,6 +1,10 @@
 // Copyright © 2016 Alan A. A. Donovan & Brian W. Kernighan.
 // License: https://creativecommons.org/licenses/by-nc-sa/4.0/
 
+//Modificado por Giancarlo Susin em 10/06/2020
+
+// Exercícios 6.1, 6.2, 6.3, 6.4
+
 // See page 165.
 
 // Package intset provides a set of integers based on a bit vector.
@@ -43,6 +47,66 @@ func (s *IntSet) UnionWith(t *IntSet) {
 			s.words = append(s.words, tword)
 		}
 	}
+}
+
+func (s *IntSet) Len() int {
+	count := 0
+	for _, w := range s.words {
+		if w == 0 {
+			continue
+		}
+		for j := 0; j < 64; j++ {
+			if w&(1<<uint(j)) != 0 {
+				count++
+			}
+		}
+	}
+	return count
+}
+
+func (s *IntSet) Remove(x int) {
+	word, bit := x/64, uint(x%64)
+	if word < len(s.words) {
+		s.words[word] &^= (1 << bit)
+	}
+}
+
+func (s *IntSet) Clear() {
+	s.words = nil
+}
+
+func (s *IntSet) Copy() *IntSet {
+	var t IntSet
+	t.UnionWith(s)
+	return &t
+}
+
+func (s *IntSet) AddAll(vals ...int) {
+	for _, val := range vals {
+		s.Add(val)
+	}
+}
+
+func (s *IntSet) IntersectWith(t *IntSet) {
+	lenInt := len(s.words)
+	if len(t.words) < lenInt {
+		lenInt = len(t.words)
+	}
+	for i := 0; i < lenInt; i++ {
+		s.words[i] &= t.words[i]
+	}
+}
+
+func (s *IntSet) Elems() []int {
+	var e []int
+	for i := 0; i < len(s.words); i++ {
+		for j := 0; j < 64; j++ {
+			if s.words[i]&(1<<j) > 0 {
+				e = append(e, i*64+j)
+			}
+		}
+	}
+	return e
 }
 
 //!-intset
