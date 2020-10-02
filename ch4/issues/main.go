@@ -2,6 +2,8 @@
 // License: https://creativecommons.org/licenses/by-nc-sa/4.0/
 
 // See page 112.
+
+// Exercício 4.10
 //!+
 
 // Issues prints a table of GitHub issues matching the search terms.
@@ -11,6 +13,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"gopl.io/ch4/github"
 )
@@ -22,9 +25,14 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Printf("%d issues:\n", result.TotalCount)
+	agora := time.Now()
+	//ummesatras := agora.AddDate(0, -1, 0)
+	umanoatras := agora.AddDate(-1, 0, 0)
 	for _, item := range result.Items {
-		fmt.Printf("#%-5d %9.9s %.55s\n",
-			item.Number, item.User.Login, item.Title)
+		if item.CreatedAt.Before(umanoatras) {
+			fmt.Printf("#%-5d %9.9s %.55s %v\n",
+				item.Number, item.User.Login, item.Title, item.CreatedAt)
+		}
 	}
 }
 

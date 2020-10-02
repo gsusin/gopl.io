@@ -1,6 +1,7 @@
 // Copyright © 2016 Alan A. A. Donovan & Brian W. Kernighan.
 // License: https://creativecommons.org/licenses/by-nc-sa/4.0/
 
+// Exercício 4.14
 // See page 110.
 //!+
 
@@ -21,6 +22,7 @@ type Issue struct {
 	Number    int
 	HTMLURL   string `json:"html_url"`
 	Title     string
+	Milestone *Milestone
 	State     string
 	User      *User
 	CreatedAt time.Time `json:"created_at"`
@@ -30,6 +32,12 @@ type Issue struct {
 type User struct {
 	Login   string
 	HTMLURL string `json:"html_url"`
+}
+
+type Milestone struct {
+	Title   string
+	HTMLURL string `json:"html_url"`
+	Creator *User
 }
 
 //!-
