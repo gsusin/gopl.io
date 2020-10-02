@@ -1,6 +1,8 @@
 // Copyright © 2016 Alan A. A. Donovan & Brian W. Kernighan.
 // License: https://creativecommons.org/licenses/by-nc-sa/4.0/
 
+// Exercício 5.18
+
 // See page 148.
 
 // Fetch saves the contents of a URL into a local file.
@@ -32,11 +34,12 @@ func fetch(url string) (filename string, n int64, err error) {
 	if err != nil {
 		return "", 0, err
 	}
+	defer func() {
+		if closeErr := f.Close(); err == nil {
+			err = closeErr
+		}
+	}()
 	n, err = io.Copy(f, resp.Body)
-	// Close file, but prefer error from Copy, if any.
-	if closeErr := f.Close(); err == nil {
-		err = closeErr
-	}
 	return local, n, err
 }
 
