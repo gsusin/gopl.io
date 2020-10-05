@@ -3,6 +3,9 @@
 
 // See page 198.
 
+// Modificado por Giancarlo Susin
+// Exercício 7.14
+
 // Package eval provides an expression evaluator.
 package eval
 
@@ -65,6 +68,21 @@ func (c call) Eval(env Env) float64 {
 		return math.Sqrt(c.args[0].Eval(env))
 	}
 	panic(fmt.Sprintf("unsupported function call: %s", c.fn))
+}
+
+func (e ext) Eval(env Env) float64 {
+	switch e.fn {
+	case "max":
+		var m float64
+		for _, n := range e.args {
+			ne := n.Eval(env)
+			if ne > m {
+				m = ne
+			}
+		}
+		return m
+	}
+	panic(fmt.Sprintf("unsopported function call: %s", e.fn))
 }
 
 //!-Eval2

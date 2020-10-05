@@ -27,6 +27,7 @@ func TestEval(t *testing.T) {
 		{"-1 + -x", Env{"x": 1}, "-2"},
 		{"-1 - x", Env{"x": 1}, "-2"},
 		//!+Eval
+		{"max(4, 3.1, 3, 0, x)", Env{"x": 11}, "11"},
 	}
 	var prevExpr string
 	for _, test := range tests {
@@ -83,6 +84,7 @@ func TestErrors(t *testing.T) {
 		{`"hello"`, "unexpected '\"'"},
 		{"log(10)", `unknown function "log"`},
 		{"sqrt(1, 2)", "call to sqrt has 2 args, want 1"},
+		{"max(2)", "call to max has 1 args, want minimum of 2"},
 	} {
 		expr, err := Parse(test.expr)
 		if err == nil {
@@ -111,3 +113,23 @@ log(10)             unknown function "log"
 sqrt(1, 2)          call to sqrt has 2 args, want 1
 //!-errors
 */
+
+func ExamplePrint() {
+	for _, test := range []string{
+		"2 + 4 * 8",
+		"pow(x*1.6 , 2) / sin (x)",
+		"max(4, 3.1, 3, 0, 11)",
+	} {
+		expr, err := Parse(test)
+		if err != nil {
+			fmt.Println("parsing error")
+			continue
+		}
+		//fmt.Printf("%s ===> %s\n", test, expr)
+		fmt.Printf("%s\n", expr)
+	}
+	// Output:
+	// 2.000000 + 4.000000 * 8.000000
+	// pow(x * 1.600000, 2.000000) / sin(x)
+	// max(4.000000, 3.100000, 3.000000, 0.000000, 11.000000)
+}

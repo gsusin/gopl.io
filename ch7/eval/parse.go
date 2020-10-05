@@ -135,7 +135,12 @@ func parsePrimary(lex *lexer) Expr {
 			}
 		}
 		lex.next() // consume ')'
-		return call{id, args}
+		switch id {
+		case "max":
+			return ext{id, args}
+		default:
+			return call{id, args}
+		}
 
 	case scanner.Int, scanner.Float:
 		f, err := strconv.ParseFloat(lex.text(), 64)

@@ -53,6 +53,21 @@ func (c call) Check(vars map[Var]bool) error {
 	return nil
 }
 
+func (e ext) Check(vars map[Var]bool) error {
+	if e.fn != "max" {
+		return fmt.Errorf("unknown function %s", e.fn)
+	}
+	if len(e.args) < 2 {
+		return fmt.Errorf("call to max has %d args, want minimum of 2", len(e.args))
+	}
+	for _, arg := range e.args {
+		if err := arg.Check(vars); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 var numParams = map[string]int{"pow": 2, "sin": 1, "sqrt": 1}
 
 //!-Check
