@@ -4,7 +4,7 @@
 // See page 195.
 
 // Modificado por Giancarlo Susin
-// Exercício 7.11
+// Exercício 7.12
 
 // Http4 is an e-commerce server that registers the /list and /price
 // endpoint by calling http.HandleFunc.
@@ -12,6 +12,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"strconv"
@@ -21,6 +22,23 @@ import (
 //!+main
 
 var mu sync.Mutex
+
+var itemsList = template.Must(template.New("itemsList").Parse(`
+<h1>Items</h1>
+<table>
+<tr style='text-align: left'>
+  <th>Name</th>
+  <th>Price</th>
+</tr>
+{{range .}}
+<tr>
+  <td>{{.Name}}</td>
+  <td>{{.Price}}</td>
+</tr>
+{{end}}
+</table>
+<p>{{len .}} itens na lista.</p>
+`))
 
 func main() {
 	db := database{"shoes": 50, "socks": 5}
@@ -40,9 +58,19 @@ func (d dollars) String() string { return fmt.Sprintf("$%.2f", d) }
 
 type database map[string]dollars
 
+type db_item struct {
+	Name  string
+	Price dollars
+}
+
 func (db database) list(w http.ResponseWriter, req *http.Request) {
-	for item, price := range db {
-		fmt.Fprintf(w, "%s: %s\n", item, price)
+	var items []*db_item
+	for i, p := range db {
+		//fmt.Fprintf(w, "%s: %s\n", item, price)
+		items = append(items, &db_item{i, p})
+	}
+	if err := itemsList.Execute(w, items); err != nil {
+		log.Fatal(err)
 	}
 }
 

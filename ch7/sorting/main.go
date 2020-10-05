@@ -3,6 +3,10 @@
 
 // See page 187.
 
+//Modificado por Giancarlo Susin
+
+//Exercício 7.8
+
 // Sorting sorts a music playlist into a variety of orders.
 package main
 
@@ -26,6 +30,7 @@ type Track struct {
 var tracks = []*Track{
 	{"Go", "Delilah", "From the Roots Up", 2012, length("3m38s")},
 	{"Go", "Moby", "Moby", 1992, length("3m37s")},
+	{"Go Back", "Moby", "Moby2", 2001, length("3m37s")},
 	{"Go Ahead", "Alicia Keys", "As I Am", 2007, length("4m36s")},
 	{"Ready 2 Go", "Martin Solveig", "Smash", 2011, length("4m24s")},
 }
@@ -72,6 +77,60 @@ func (x byYear) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 
 //!-yearcode
 
+type multiTier2 struct {
+	t    []*Track
+	crit []string
+}
+
+func (x multiTier2) Len() int { return len(x.t) }
+func (x multiTier2) Less(i, j int) bool {
+	for n := len(x.crit) - 1; n >= 0; n-- {
+		//fmt.Println(x.crit[n])
+		switch x.crit[n] {
+		case "byYear":
+			if x.t[i].Year < x.t[j].Year {
+				//fmt.Printf("%d < %d\n", x.t[i].Year, x.t[j].Year)
+				return true
+			}
+			if x.t[i].Year > x.t[j].Year {
+				//fmt.Printf("%d > %d\n", x.t[i].Year, x.t[j].Year)
+				return false
+			}
+		case "byArtist":
+			//fmt.Printf("Artists: %s(%d) / %s(%d)\n", x.t[i].Artist, i, x.t[j].Artist, j)
+			if x.t[i].Artist < x.t[j].Artist {
+				//fmt.Printf("%s < %s\n", x.t[i].Artist, x.t[j].Artist)
+				return true
+			}
+			if x.t[i].Artist > x.t[j].Artist {
+				//fmt.Printf("%s > %s\n", x.t[i].Artist, x.t[j].Artist)
+				return false
+			}
+		}
+		//fmt.Println("Deu empate.")
+	}
+	return false
+}
+func (x multiTier2) Swap(i, j int) { x.t[i], x.t[j] = x.t[j], x.t[i] }
+
+// Não usado
+type multiTier []*Track
+
+// Só funciona se chamada a partir de sort.Stable()
+func (x multiTier) Criterion(tipo string) sort.Interface {
+	switch tipo {
+	case "byYear":
+		return byYear(x)
+	case "byArtist":
+		return byArtist(x)
+	default:
+		return nil
+	}
+}
+func (x multiTier) Len() int { return len(x) }
+
+//func (x multiTier) Less(i, j int)
+
 func main() {
 	fmt.Println("byArtist:")
 	sort.Sort(byArtist(tracks))
@@ -99,6 +158,11 @@ func main() {
 		}
 		return false
 	}})
+	printTracks(tracks)
+
+	fmt.Println("\nMulti tier:")
+	sort.Sort(multiTier2{tracks, []string{"byYear", "byArtist"}})
+
 	//!-customcall
 	printTracks(tracks)
 }

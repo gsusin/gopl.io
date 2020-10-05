@@ -3,6 +3,8 @@
 
 // See page 181.
 
+// Exercício 7.6
+
 // Tempflag prints the value of its -temp (temperature) flag.
 package main
 
@@ -15,10 +17,12 @@ import (
 
 //!+
 var temp = tempconv.CelsiusFlag("temp", 20.0, "the temperature")
+var tempK = tempconv.KelvinFlag("tempK", 300.0, "the temperature")
 
 func main() {
 	flag.Parse()
 	fmt.Println(*temp)
+	fmt.Println(*tempK)
 }
 
 //!-
