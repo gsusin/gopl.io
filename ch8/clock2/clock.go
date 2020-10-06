@@ -3,6 +3,10 @@
 
 // See page 222.
 
+// Exercício 8.1
+
+// Modificado por Giancarlo Susin
+
 // Clock is a TCP server that periodically writes the time.
 package main
 
@@ -10,6 +14,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"os"
 	"time"
 )
 
@@ -25,7 +30,8 @@ func handleConn(c net.Conn) {
 }
 
 func main() {
-	listener, err := net.Listen("tcp", "localhost:8000")
+	port := os.Args[1]
+	listener, err := net.Listen("tcp", "localhost:"+port)
 	if err != nil {
 		log.Fatal(err)
 	}

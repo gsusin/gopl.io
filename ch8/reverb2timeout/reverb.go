@@ -4,7 +4,7 @@
 // See page 224.
 
 // Modificado por Giancarlo Susin
-// Exercício 8.4
+// Exercício 8.8
 
 // Reverb2 is a TCP server that simulates an echo.
 package main
@@ -15,48 +15,44 @@ import (
 	"log"
 	"net"
 	"strings"
-	"sync"
 	"time"
 )
 
-type closeWriter interface {
-	CloseWrite() error
-}
-
-func echo(c net.Conn, shout string, delay time.Duration, wg *sync.WaitGroup) {
+func echo(c net.Conn, shout string, delay time.Duration) {
 	fmt.Fprintln(c, "\t", strings.ToUpper(shout))
 	time.Sleep(delay)
 	fmt.Fprintln(c, "\t", shout)
 	time.Sleep(delay)
 	fmt.Fprintln(c, "\t", strings.ToLower(shout))
-	wg.Done()
 }
 
 //!+
 func handleConn(c net.Conn) {
-	var wg sync.WaitGroup
-	//done := make(chan int)
-
-	input := bufio.NewScanner(c)
-	for input.Scan() {
-		wg.Add(1)
-		go echo(c, input.Text(), 1*time.Second, &wg)
-	}
-	// NOTE: ignoring potential errors from input.Err()
+	ch := make(chan string)
 	go func() {
-		wg.Wait()
-		if cl, ok := c.(closeWriter); ok {
-			cl.CloseWrite()
-		} else {
-			c.Close()
+		input := bufio.NewScanner(c)
+		for input.Scan() {
+			ch <- input.Text()
 		}
 	}()
+	for {
+		select {
+		case msg := <-ch:
+			go echo(c, msg, 1*time.Second)
+		case <-time.After(10 * time.Second):
+			// NOTE: ignoring potential errors from input.Err()
+			c.Close()
+			return
+		}
+	}
 }
+
+//func scanConn() {
 
 //!-
 
 func main() {
-	l, err := net.Listen("tcp", "localhost:8001")
+	l, err := net.Listen("tcp", "localhost:8003")
 	if err != nil {
 		log.Fatal(err)
 	}
