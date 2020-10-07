@@ -1,9 +1,40 @@
 // Copyright © 2016 Alan A. A. Donovan & Brian W. Kernighan.
 // License: https://creativecommons.org/licenses/by-nc-sa/4.0/
 
+// Exercício 11.7
+
 package intset
 
-import "fmt"
+import (
+    "fmt"
+    "math"
+    "math/rand"
+    "gopl.io/ch11/intsetmap"
+    "testing"
+    "time"
+)
+
+func newRng() *rand.Rand {
+    seed := time.Now().UTC().UnixNano()
+    return rand.New(rand.NewSource(seed))
+}
+
+func BenchmarkAdd(b *testing.B) {
+    var x IntSet
+    rng := newRng()
+    for i := 0; i < b.N; i++ {
+        x.Add(rng.Intn(math.MaxUint32 / 2))
+    }   
+}
+
+func BenchmarkAddMap(b *testing.B) {
+    var x intsetmap.IntSetMap
+    x.Init()
+    rng := newRng()
+    for i := 0; i < b.N; i++ {
+        x.Add(rng.Intn(math.MaxUint32 / 2))
+    }   
+}
 
 func Example_one() {
 	//!+main

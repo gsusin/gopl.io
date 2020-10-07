@@ -1,17 +1,19 @@
 // Copyright © 2016 Alan A. A. Donovan & Brian W. Kernighan.
 // License: https://creativecommons.org/licenses/by-nc-sa/4.0/
 
+// Exercício 11.3
+
 package word
 
 import (
 	"fmt"
 	"math/rand"
+	"testing"
 	"time"
+	"unicode"
 )
 
 //!+bench
-
-import "testing"
 
 //!-bench
 
@@ -75,11 +77,21 @@ import "math/rand"
 //!+random
 // randomPalindrome returns a palindrome whose length and contents
 // are derived from the pseudo-random number generator rng.
-func randomPalindrome(rng *rand.Rand) string {
-	n := rng.Intn(25) // random length up to 24
+func randomPalindrome(rng *rand.Rand, minLen ...int) string {
+	if len(minLen) == 0 {
+		minLen = []int{0}
+	}
+	n := rng.Intn(25-minLen[0]) + minLen[0] // random length up to 24
 	runes := make([]rune, n)
+	var r rune
 	for i := 0; i < (n+1)/2; i++ {
-		r := rune(rng.Intn(0x1000)) // random rune up to '\u0999'
+		for {
+			r = rune(rng.Intn(0x1000)) // random rune up to '\u0999'
+			if unicode.IsLetter(r) {
+				r = unicode.ToLower(r)
+				break
+			}
+		}
 		runes[i] = r
 		runes[n-1-i] = r
 	}
@@ -96,6 +108,37 @@ func TestRandomPalindromes(t *testing.T) {
 		p := randomPalindrome(rng)
 		if !IsPalindrome(p) {
 			t.Errorf("IsPalindrome(%q) = false", p)
+		}
+	}
+}
+
+func randomNotPalindrome(rng *rand.Rand) string {
+	pal := randomPalindrome(rng, 2)
+	r := []rune(pal)
+	for {
+		offset := rng.Intn(len(r))
+		opposite := len(r) - 1 - offset
+		if offset == opposite {
+			continue
+		}
+		if r[opposite] == 'x' {
+			r[offset] = 'y'
+		} else {
+			r[offset] = 'x'
+		}
+		break
+	}
+	return string(r)
+}
+
+func TestRandomNotPalindrome(t *testing.T) {
+	seed := time.Now().UTC().UnixNano()
+	t.Logf("Random seed: %d", seed)
+	rng := rand.New(rand.NewSource(seed))
+	for i := 0; i < 1000; i++ {
+		np := randomNotPalindrome(rng)
+		if IsPalindrome(np) {
+			t.Errorf("IsPalindrome(%q) = true", np)
 		}
 	}
 }
