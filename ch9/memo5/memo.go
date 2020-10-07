@@ -1,6 +1,9 @@
 // Copyright © 2016 Alan A. A. Donovan & Brian W. Kernighan.
 // License: https://creativecommons.org/licenses/by-nc-sa/4.0/
 
+// Modificado por Giancarlo Susin
+// Exercício 9.3
+
 // See page 278.
 
 // Package memo provides a concurrency-safe non-blocking memoization
@@ -12,7 +15,7 @@ package memo
 //!+Func
 
 // Func is the type of the function to memoize.
-type Func func(key string) (interface{}, error)
+type Func func(key string, done <-chan struct{}) (interface{}, error)
 
 // A result is the result of calling a Func.
 type result struct {
@@ -33,6 +36,7 @@ type entry struct {
 type request struct {
 	key      string
 	response chan<- result // the client wants a single result
+	done     <-chan struct{}
 }
 
 type Memo struct{ requests chan request }
@@ -44,9 +48,9 @@ func New(f Func) *Memo {
 	return memo
 }
 
-func (memo *Memo) Get(key string) (interface{}, error) {
+func (memo *Memo) Get(key string, done <-chan struct{}) (interface{}, error) {
 	response := make(chan result)
-	memo.requests <- request{key, response}
+	memo.requests <- request{key, response, done}
 	res := <-response
 	return res.value, res.err
 }
@@ -65,17 +69,27 @@ func (memo *Memo) server(f Func) {
 			// This is the first request for this key.
 			e = &entry{ready: make(chan struct{})}
 			cache[req.key] = e
-			go e.call(f, req.key) // call f(key)
+			go func(e *entry, f Func, k string, done <-chan struct{}) {
+				r := e.call(f, k, done) // call f(key)
+				if !r {
+					cache[k] = nil
+				}
+			}(e, f, req.key, req.done)
 		}
 		go e.deliver(req.response)
 	}
 }
 
-func (e *entry) call(f Func, key string) {
+func (e *entry) call(f Func, key string, done <-chan struct{}) bool {
 	// Evaluate the function.
-	e.res.value, e.res.err = f(key)
+	e.res.value, e.res.err = f(key, done)
+	if e.res.value == nil {
+		close(e.ready)
+		return false
+	}
 	// Broadcast the ready condition.
 	close(e.ready)
+	return true
 }
 
 func (e *entry) deliver(response chan<- result) {

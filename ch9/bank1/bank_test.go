@@ -1,6 +1,8 @@
 // Copyright © 2016 Alan A. A. Donovan & Brian W. Kernighan.
 // License: https://creativecommons.org/licenses/by-nc-sa/4.0/
 
+//Exercício 9.1
+
 package bank_test
 
 import (
@@ -32,5 +34,28 @@ func TestBank(t *testing.T) {
 
 	if got, want := bank.Balance(), 300; got != want {
 		t.Errorf("Balance = %d, want %d", got, want)
+	}
+
+	go func() {
+		if !bank.Withdraw(200) {
+			fmt.Println("withdraw unsuccessful")
+		}
+		fmt.Println("=", bank.Balance())
+		done <- struct{}{}
+	}()
+
+	go func() {
+		if !bank.Withdraw(200) {
+			fmt.Println("withdraw unsuccessful")
+		}
+		fmt.Println("=", bank.Balance())
+		done <- struct{}{}
+	}()
+
+	<-done
+	<-done
+
+	if got, want := bank.Balance(), 100; got != want {
+		t.Errorf("Balance after withdraws = %d, want %d", got, want)
 	}
 }
